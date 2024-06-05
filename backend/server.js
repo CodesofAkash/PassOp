@@ -1,51 +1,68 @@
-const express = require('express')
-const dotenv = require('dotenv')
+const express = require('express');
 const { MongoClient } = require('mongodb');
-const bodyparser = require('body-parser');
-const cors = require('cors')
+const cors = require('cors');
+const serverless = require('serverless-http');
+const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
 
-dotenv.config()
+dotenv.config();
 
-// Connection URL
-const url = process.env.MONGO_URI;
-const client = new MongoClient(url);
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
 
-// Database Name
+const client = new MongoClient(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
 const dbName = 'passop';
-const app = express()
-const port = 3000
-app.use(bodyparser.json())
-app.use(cors())
-client.connect();
 
-// console.log(process.env.MONGO_URI) // remove this after you've confirmed it is working
+app.get('/api', async (req, res) => {
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection('passOP-passwords');
+    const findPasswords = await collection.find().toArray();
+    res.json(findPasswords);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  } finally {
+    await client.close();
+  }
+});
 
-//Show all passwords
-app.get('/', async(req, res) => {
-  const db = client.db(dbName);
-  const collection = db.collection("passOP-passwords");
-  const findPasswords = await collection.find().toArray();
-  res.json(findPasswords)
-})
+app.post('/api', async (req, res) => {
+  try {
+    const password = req.body;
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection('passOP-passwords');
+    const feedback = await collection.insertOne(password);
+    res.json({ success: true, result: feedback });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  } finally {
+    await client.close();
+  }
+});
 
-//Save a password
-app.post('/', async(req, res) => {
-  const password = req.body;
-  const db = client.db(dbName);
-  const collection = db.collection("passOP-passwords");
-  const feedback = await collection.insertOne(password);
-  res.json({success: true, result: feedback})
-})
+app.delete('/api/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection('passOP-passwords');
+    const feedback = await collection.deleteOne({ idOfClient: id });
+    res.json({ message: 'Item Deleted', result: feedback });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  } finally {
+    await client.close();
+  }
+});
 
-//Delete a password by id
-app.delete('/:id', async(req, res) => {
-  const id = req.params.id;
-  const db = client.db(dbName);
-  const collection = db.collection("passOP-passwords");
-  const feedback = await collection.deleteOne({idOfClient :id});
-  res.send({message: "Item Deleted", result: feedback})
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port http://localhost:${port}`)
-})
+module.exports.handler = serverless(app);
