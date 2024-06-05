@@ -12,7 +12,7 @@ const Manager = () => {
 
 
     const getPassword = async () => {
-        let req = await fetch("http://localhost:3000/")
+        let req = await fetch("https://passop-passwordmanager-9rgkp0awc-codesofakashs-projects.vercel.app/")
         let passwords = await req.json();
         setpasswordArray(passwords);
     }
@@ -47,7 +47,7 @@ const Manager = () => {
             alert("Please enter valid username")
         } else {
             setpasswordArray([...passwordArray, { ...form, id: uuidv4() }]);
-            let res = await fetch("http://localhost:3000/", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ ...form, idOfClient: uuidv4() })});
+            let res = await fetch("https://passop-passwordmanager-9rgkp0awc-codesofakashs-projects.vercel.app/", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ ...form, idOfClient: uuidv4() })});
             let result = await res.json()
             console.log(result);
         }
@@ -101,7 +101,7 @@ const Manager = () => {
     const deleteItemInside = async (item) => {
         let id = item.idOfClient;
         setpasswordArray(passwordArray.filter(i=>i.idOfClient !== id));
-        let res = await fetch(`http://localhost:3000/${id}`, {method: "DELETE", headers: {"Content-Type": "application/json"}});
+        let res = await fetch(`https://passop-passwordmanager-9rgkp0awc-codesofakashs-projects.vercel.app/${id}`, {method: "DELETE", headers: {"Content-Type": "application/json"}});
         let response = await res.json();
         console.log(response);
     }
