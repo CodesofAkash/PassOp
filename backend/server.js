@@ -16,7 +16,7 @@ const client = new MongoClient(process.env.MONGO_URI, {
   useUnifiedTopology: true,
 });
 
-const dbName = 'passop';
+const dbName = 'PassOp';
 
 app.get('/api', async (req, res) => {
   try {
